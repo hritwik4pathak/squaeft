@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {FaSearch} from 'react-icons/fa'
+import { SignedIn,SignedOut,UserButton } from "@clerk/nextjs";
 export default function Navbar() {
      return(
         <header className="bg-slate-200 shadow-md">
@@ -28,9 +29,15 @@ export default function Navbar() {
                     <Link href='/about'>
                     <li className=" hidden sm:inline text-slate-700 hover:underline">About</li>
                     </Link>
+                    <SignedIn>
+                        <UserButton />
+                    </SignedIn>
+                    <SignedOut >
                     <Link href='/sign-in'>
                     <li className=" hidden sm:inline text-slate-700 hover:underline">Sign In</li>
                     </Link>
+                    </SignedOut>
+
                 </ul>
             </div>
         </header>
