@@ -65,7 +65,7 @@ const body = JSON.stringify(payload);
         try {
           await clerkClient.users.updateUserMetadata(id, {
             publicMetadata: { userMongoId: user._id },
-            uswerMongoID: user._id,
+            userMongoID: user._id,
           });
         } catch (error) {
           console.error('Error: could not update user metadata:', error);
