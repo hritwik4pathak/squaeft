@@ -63,15 +63,18 @@ const body = JSON.stringify(payload);
 
       if (user && eventType === 'user.created') {
         try {
-          await clerkClient.users.updateUser(id, {
+          await clerkClient.users.updateUserMetadata(id, {
             publicMetadata: { userMongoId: user._id },
+            uswerMongoID: user._id,
           });
         } catch (error) {
-          console.error('Error updating user metadata:', error);
+          console.error('Error: could not update user metadata:', error);
         }
       }
     } catch (error) {
-      console.error('Error creating or updating user:', error);
+      console.error('Error: could not create or update user:', error);
+      return new Response('Error: could not create or update user', {
+         status: 400 });
     }
   }
 
@@ -79,8 +82,9 @@ const body = JSON.stringify(payload);
     try {
       await deleteUser(id);
     } catch (error) {
-      console.error('Error deleting user:', error);
-      return new Response('Error deleting user', { status: 400 });
+      console.error('Error: could not delete user:', error);
+      return new Response('Error: could not delete user', {
+         status: 400 });
     }
   }
 
