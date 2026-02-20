@@ -24,7 +24,7 @@ export const POST = async (req) => {
     }
 
     const newListing = await Listing.create({
-      userRef: userMongoId,
+      userid: userMongoId,
       name: data.name,
       description: data.description,
       regularprice: data.regularprice,
