@@ -1,14 +1,15 @@
 "use client"
-import { useEffect, useState } from "react"
-import { getDownloadURL,
+import {
+    getDownloadURL,
     getStorage,
     ref,
     uploadBytesResumable,
 } from "firebase/storage"
-import {app} from "../../firebase/firebase"
+import { useEffect, useState } from "react"
+
+import { app } from "@/firebase"
 import { useUser } from "@clerk/nextjs"
-import { useRouter, usePathname } from "next/navigation"
-import { set } from "mongoose"
+import { usePathname, useRouter } from "next/navigation"
 export default function UpdateListing() {
     const {isSignedIn, user,isLoaded} = useUser()
     const [files, setFiles] = useState([]);
