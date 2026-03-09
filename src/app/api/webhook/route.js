@@ -46,11 +46,11 @@ const body = JSON.stringify(payload);
     return new Response('Invalid signature', { status: 400 });
   }
 
-  const eventType = evt.type;
-  const { id } = evt.data;
+  const { id } = evt?.data;
+  const eventType = evt?.type;
 
   if (eventType === 'user.created' || eventType === 'user.updated') {
-    const { first_name, last_name, image_url, email_addresses } = evt.data;
+    const { first_name, last_name, image_url, email_addresses } = evt?.data;
 
     try {
       const user = await createOrUpdateUser(
@@ -63,10 +63,12 @@ const body = JSON.stringify(payload);
 
       if (user && eventType === 'user.created') {
         try {
-          await clerkClient.users.updateUserMetadata(id, {
-            publicMetadata: { userMongoId: user._id },
-            userMongoID: user._id,
-          });
+          await clerkClient.user.updateUserMetadata(id, {
+            publicMetadata: { 
+              userMongoId: user._id 
+            },
+          }
+        );
         } catch (error) {
           console.error('Error: could not update user metadata:', error);
         }
