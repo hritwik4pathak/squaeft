@@ -63,7 +63,7 @@ const body = JSON.stringify(payload);
 
       if (user && eventType === 'user.created') {
         try {
-          await clerkClient.user.updateUserMetadata(id, {
+          await clerkClient.users.updateUserMetadata(id, {
             publicMetadata: { 
               userMongoId: user._id 
             },

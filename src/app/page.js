@@ -52,29 +52,38 @@ export default async function Home() {
     offlistings = {title: 'Failed to load listings'};
   }
   return (
-    <div className="flex flex-col gap-6 p-28 px-3 max-w-6xl mx-auto">
-      <h1 className="text-slate-700 font-bold text-3xl lg:text-6xl">
-        Find Your <span className="text-slate-500">Dream</span>
-        <br />
-        Home with ease
-      </h1>
-      <div className="text-gray-400 text-xs sm:text-sm">
-        (.....) is the best place to find your dream home.
-        <br />
-        We have a wide range of listings for rent and sale, as well as special offers.
-        <br /> Whether looking for a cozy apartment or a spacious house, we have something for everyone.
-      </div>
-      <Link
-        href={'/search'}
-        className="text-xs sm:text-sm text-blue-800 font-bold hover:underline"
+    <div className="flex flex-col gap-6 p-28 px-3 w-full mx-auto">
+      <div
+        className="relative w-full h-[450px] mb-6"
+        style={{
+          backgroundImage: 'url(/Asets/home-page.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
-        Let&apos;s find your dream home
-      </Link>
-      <img
-        src="https://images.unsplash.com/photo-1501183638714-841dd81dca9e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG91c2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"
-        className="w-full h-[550px] object-cover "
-        alt="House"
-      />
+        <div className="absolute inset-0  bg-opacity-20"></div>
+        <h1
+          className="absolute top-8 left-8 z-20 text-slate-800 font-bold text-3xl lg:text-6xl drop-shadow-lg"
+        >
+          Find Your <span className="text-slate-300">Dream</span>
+          <br />
+          Home with ease
+        </h1>
+        <div className="relative z-10 text-center px-6 flex flex-col items-center justify-center h-full">
+          <div className="text-green-500 mt-53 text-xs sm:text-sm font-semibold drop-shadow-lg">
+            (.....) is the best place to find your dream home.
+            <br />
+            We have a wide range of listings for rent and sale, as well as special offers.
+            <br /> Whether looking for a cozy apartment or a spacious house, we have something for everyone.
+          </div>
+          <Link
+            href={'/search'}
+            className="mt-4 inline-block text-xs sm:text-sm text-white font-bold hover:underline bg-orange-500 bg-opacity-80 px-4 py-2 rounded"
+          >
+            Let&apos;s find your dream home
+          </Link>
+        </div>
+      </div>
 
       {offlistings && offlistings.length > 0 && (
         <div>
