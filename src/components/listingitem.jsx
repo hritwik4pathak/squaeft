@@ -28,7 +28,7 @@ export default function ListingItems({listing}) {
                     <p className="text-lg mt-2 font-semibold text-slate-500">
                         $
                         {listing.offer
-                           ? listing.discountprice.toLocaleString('en-US')
+                           ? listing.discountedprice.toLocaleString('en-US')
                            : listing.regularprice.toLocaleString('en-US')}
                            {listing.type === 'rent' && ' /month'}
                     </p>

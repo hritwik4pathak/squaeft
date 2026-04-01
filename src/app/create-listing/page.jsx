@@ -137,8 +137,17 @@ export default function CreateListing() {
 
 
 
+
     const handleSubmit = async(e) => {
         e.preventDefault();
+        if (!isLoaded) {
+            setError('User data is still loading. Please wait.');
+            return;
+        }
+        if (!isSignedIn || !user || !user.publicMetadata || !user.publicMetadata.userMongoId) {
+            setError('You must be signed in to create a listing.');
+            return;
+        }
         try{
             if(formData.imageUrls.length <1)
                 return setError('Please upload at least one image.');
@@ -161,8 +170,9 @@ export default function CreateListing() {
             setLoading(false);
             if(data.success===false){
                 setError(data.message);
+                return;
             }
-            route.push(`/listing/${data._id}`);
+            route.push(`/listing/${data.data._id}`);
         } catch (err){
             setError(err?.message);
             setLoading(false);
