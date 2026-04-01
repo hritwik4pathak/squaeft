@@ -54,7 +54,7 @@ export default async function Home() {
   }
   return (
     <div className="flex flex-col gap-6 p-28 px-3 w-full mx-auto">
-      <div className="relative w-full h-[450px] mb-6 overflow-hidden">
+      <div className="relative w-full h-96 mb-6 overflow-hidden">
         <Image
           src="/Assets/home-page.png"
           alt="Home background"

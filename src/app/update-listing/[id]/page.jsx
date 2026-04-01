@@ -312,7 +312,7 @@ export default function UpdateListing() {
                             className='border p-3 rounded-lg w-full'
                             type='file'
                             id='images'
-                            accept='.jpg,.png,.jpeg'
+                            accept='.jpg,.png,.jpeg,.webp'
                             multiple
                             onChange={(e) => setFiles(e.target.files)}
                         />

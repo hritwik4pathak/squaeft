@@ -328,7 +328,7 @@ export default function CreateListing() {
                                   className='border  p-3 rounded-lg w-full'
                                   type='file'
                                   id='images'
-                                    accept='.jpg,.png,.jpeg'
+                                    accept='.jpg,.png,.jpeg,.webp'
                                     multiple
                                     required
                                     onChange={(e)=> {
