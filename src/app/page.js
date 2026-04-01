@@ -1,4 +1,5 @@
 import ListingItems from "@/components/listingitem";
+import Image from "next/image";
 import Link from "next/link";
 export default async function Home() {
   let rentlistings = null;
@@ -53,24 +54,25 @@ export default async function Home() {
   }
   return (
     <div className="flex flex-col gap-6 p-28 px-3 w-full mx-auto">
-      <div
-        className="relative w-full h-[450px] mb-6"
-        style={{
-          backgroundImage: 'url(/Asets/home-page.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <div className="relative w-full h-[450px] mb-6 overflow-hidden">
+        <Image
+          src="/Assets/home-page.png"
+          alt="Home background"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
         <div className="absolute inset-0  bg-opacity-20"></div>
         <h1
-          className="absolute top-8 left-8 z-20 text-slate-800 font-bold text-3xl lg:text-6xl drop-shadow-lg"
+          className="absolute top-8 left-8 z-20 text-slate-700 font-bold text-3xl lg:text-6xl drop-shadow-lg"
         >
           Find Your <span className="text-slate-300">Dream</span>
           <br />
           Home with ease
         </h1>
         <div className="relative z-10 text-center px-6 flex flex-col items-center justify-center h-full">
-          <div className="text-green-500 mt-53 text-xs sm:text-sm font-semibold drop-shadow-lg">
+          <div className="text-green-800 mt-53 text-xs sm:text-sm font-semibold drop-shadow-lg">
             (.....) is the best place to find your dream home.
             <br />
             We have a wide range of listings for rent and sale, as well as special offers.
