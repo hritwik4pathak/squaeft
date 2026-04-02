@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import SecondaryNav from "@/components/SecondNavBar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
         <Navbar />
+        <SecondaryNav />
         {children}
       </body>
     </html>
