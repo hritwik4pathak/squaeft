@@ -8,7 +8,12 @@ export const POST = async (req) => {
 
         const startIndex = parseInt(data.startIndex) || 0;
         const limit = parseInt(data.limit) || 9;
-        const sortDirection = data.order === 'asc' ? 1 : -1;
+
+        // ✅ support sorting by views (popular) or updatedAt (recent)
+        let sortField = { updatedAt: data.order === 'asc' ? 1 : -1 };
+        if (data.sortBy === 'views') {
+            sortField = { views: -1 }; // most viewed first
+        }
 
         let offer = data.offer;
         if (offer === undefined || offer === 'false') {
@@ -44,7 +49,7 @@ export const POST = async (req) => {
             parking,
             type,
         })
-            .sort({ updatedAt: sortDirection })
+            .sort(sortField)
             .skip(startIndex)
             .limit(limit);
 
@@ -54,14 +59,10 @@ export const POST = async (req) => {
         });
 
     } catch (error) {
-        // ✅ FIX: always return a Response, even on error
         console.error('Error getting listing:', error);
         return new Response(
             JSON.stringify({ success: false, message: error.message }),
-            {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' },
-            }
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
     }
 };

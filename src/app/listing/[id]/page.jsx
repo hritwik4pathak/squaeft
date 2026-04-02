@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
     FaBath,
     FaBed,
@@ -30,6 +31,18 @@ export default async function Listing({ params }) {
         );
     }
 
+    // ✅ Increment view count every time this page is opened
+    try {
+        await fetch(process.env.BASE_URL + '/api/listing/view', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listingId: params.id }),
+            cache: 'no-store',
+        });
+    } catch (_) {
+        // silently fail — don't crash the page if view tracking fails
+    }
+
     const regularPrice = Number(listing.regularprice ?? 0);
     const discountedPrice = Number(listing.discountedprice ?? 0);
     const displayPrice = listing.offer ? discountedPrice : regularPrice;
@@ -37,11 +50,16 @@ export default async function Listing({ params }) {
     return (
         <main>
             <div>
-                <img
-                    src={listing?.imageUrls?.[0] || "https://images.unsplash.com/photo-1501183638714-841dd81dca9e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG91c2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"}
-                    alt={listing?.name}
-                    className="w-full h-[400px] object-cover"
-                />
+                <div className="relative w-full h-[400px]">
+                    <Image
+                        src={listing?.imageUrls?.[0] || "https://placehold.co/800x400?text=No+Image"}
+                        alt={listing?.name || "Listing"}
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover"
+                    />
+                </div>
                 <div className="flex flex-col max-w-4xl mx-auto p-3 my-7 gap-4">
                     <p className="text-2xl font-semibold">
                         {listing.name} - ${' '}
@@ -69,15 +87,11 @@ export default async function Listing({ params }) {
                     <ul className="text-green-900 font-semibold text-sm flex flex-wrap items-center gap-4 sm:gap-6">
                         <li className="flex items-center gap-1 whitespace-nowrap">
                             <FaBed className="text-lg" />
-                            {listing.bedrooms > 1
-                                ? `${listing.bedrooms} Beds`
-                                : `${listing.bedrooms} Bed`}
+                            {listing.bedrooms > 1 ? `${listing.bedrooms} Beds` : `${listing.bedrooms} Bed`}
                         </li>
                         <li className="flex items-center gap-1 whitespace-nowrap">
                             <FaBath className="text-lg" />
-                            {listing.bathrooms > 1
-                                ? `${listing.bathrooms} Baths`
-                                : `${listing.bathrooms} Bath`}
+                            {listing.bathrooms > 1 ? `${listing.bathrooms} Baths` : `${listing.bathrooms} Bath`}
                         </li>
                         <li className="flex items-center gap-1 whitespace-nowrap">
                             <FaParking className="text-lg" />
@@ -88,6 +102,10 @@ export default async function Listing({ params }) {
                             {listing.furnished ? 'Furnished' : 'Not Furnished'}
                         </li>
                     </ul>
+                    {/* ✅ Show view count */}
+                    <p className="text-xs text-slate-400 mt-2">
+                        👁 {(listing.views ?? 0).toLocaleString()} views
+                    </p>
                 </div>
             </div>
         </main>
