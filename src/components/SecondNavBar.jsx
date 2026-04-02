@@ -1,6 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   {
@@ -51,13 +51,17 @@ export default function SecondaryNav() {
   return (
     <nav
       ref={navRef}
-      className="w-full bg-white border-b border-gray-200 shadow-sm z-40"
+      className="hidden sm:block w-full bg-white border-b border-gray-200 shadow-sm z-40"
       style={{ fontFamily: "'DM Sans', sans-serif" }}
     >
       {/* Google Font */}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+        .secondary-nav-scroll::-webkit-scrollbar { display: none; }
+        .secondary-nav-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
 
-      <div className="max-w-7xl mx-auto px-4 flex items-center gap-1">
+      <div className="secondary-nav-scroll max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto">
         {navItems.map((item, i) => (
           <div key={i} className="relative">
             <button
