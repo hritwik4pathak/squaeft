@@ -2,7 +2,7 @@
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaSearch } from 'react-icons/fa';
 
 const navItems = [
@@ -15,15 +15,90 @@ const navItems = [
   { label: "Help", links: ["FAQs", "Contact Us", "Report an Issue"] },
 ];
 
+const PLACEHOLDERS = [
+  "Search...",
+  "1 BHK Flat",
+  "2 BHK Flat",
+  "3 BHK Flat",
+  "Villa for Sale",
+  "House for Rent",
+  "Studio Apartment",
+  "PG near Metro",
+];
+
+// TIMING
+const PAUSE_MS = 2000;   // how long each word stays visible
+const SLIDE_MS = 400;    // how long the slide animation takes
+
+function AnimatedPlaceholder({ isFocused }) {
+  const [current, setCurrent] = useState(0);
+  const [next, setNext] = useState(1);
+  const [phase, setPhase] = useState("idle"); // "idle" | "sliding"
+
+  useEffect(() => {
+    if (isFocused) return;
+
+    // Step 1: wait PAUSE_MS, then start slide
+    const pauseTimer = setTimeout(() => {
+      setPhase("sliding");
+
+      // Step 2: after slide completes, snap to next and reset
+      const slideTimer = setTimeout(() => {
+        setCurrent((prev) => (prev + 1) % PLACEHOLDERS.length);
+        setNext((prev) => (prev + 1) % PLACEHOLDERS.length);
+        setPhase("idle");
+      }, SLIDE_MS);
+
+      return () => clearTimeout(slideTimer);
+    }, PAUSE_MS);
+
+    return () => clearTimeout(pauseTimer);
+  }, [current, isFocused]); // re-runs every time current changes
+
+  const sliding = phase === "sliding";
+
+  return (
+    <div
+      className="relative overflow-hidden pointer-events-none select-none"
+      style={{ height: "20px", width: "100%" }}
+    >
+      {/* Current word — slides UP and out */}
+      <span
+        className="absolute left-0 text-slate-400 text-sm whitespace-nowrap"
+        style={{
+          transition: sliding ? `transform ${SLIDE_MS}ms ease-in-out, opacity ${SLIDE_MS}ms ease-in-out` : "none",
+          transform: sliding ? "translateY(-100%)" : "translateY(0%)",
+          opacity: sliding ? 0 : 1,
+        }}
+      >
+        {PLACEHOLDERS[current]}
+      </span>
+
+      {/* Next word — slides UP from below */}
+      <span
+        className="absolute left-0 text-slate-400 text-sm whitespace-nowrap"
+        style={{
+          transition: sliding ? `transform ${SLIDE_MS}ms ease-in-out, opacity ${SLIDE_MS}ms ease-in-out` : "none",
+          transform: sliding ? "translateY(0%)" : "translateY(100%)",
+          opacity: sliding ? 1 : 0,
+        }}
+      >
+        {PLACEHOLDERS[next]}
+      </span>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const router = useRouter();
 
   const handleSearch = (e) => {
     e.preventDefault();
-    const term = e.target.search.value;
-    if (term) router.push(`/search?searchTerm=${term}`);
+    if (searchValue.trim()) router.push(`/search?searchTerm=${searchValue}`);
   };
 
   return (
@@ -52,13 +127,22 @@ export default function Navbar() {
             </h1>
           </Link>
 
-          {/* Search */}
-          <form onSubmit={handleSearch} className="bg-slate-100 p-3 rounded-lg flex items-center">
+          {/* Search with animated placeholder */}
+          <form onSubmit={handleSearch} className="bg-slate-100 p-3 rounded-lg flex items-center gap-2 relative">
+            {!searchFocused && !searchValue && (
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-24 sm:w-56">
+                <AnimatedPlaceholder isFocused={searchFocused} />
+              </div>
+            )}
             <input
               type='text'
               name='search'
-              placeholder='Search...'
-              className="bg-transparent focus:outline-none w-24 sm:w-64"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              className="bg-transparent focus:outline-none w-24 sm:w-64 text-sm text-slate-700 caret-slate-600"
+              autoComplete="off"
             />
             <button type="submit">
               <FaSearch className='text-slate-600' />
@@ -74,6 +158,11 @@ export default function Navbar() {
               <li className="hidden sm:inline text-slate-700 hover:underline">About</li>
             </Link>
             <SignedIn>
+              <Link href='/create-listing'>
+                <li className="hidden sm:inline bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-150 list-none">
+                  + List Property
+                </li>
+              </Link>
               <UserButton />
             </SignedIn>
             <SignedOut>
@@ -107,8 +196,6 @@ export default function Navbar() {
       {/* Slide-in Drawer */}
       {drawerOpen && (
         <div className="drawer fixed top-0 right-0 h-full w-72 bg-white shadow-2xl z-50 flex flex-col overflow-y-auto">
-
-          {/* Drawer header */}
           <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-slate-200">
             <h2 className="font-bold text-slate-700 text-lg">
               <span className="text-slate-500">SqFt</span>Estate
@@ -122,7 +209,6 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Nav links */}
           <div className="flex flex-col px-4 py-3 gap-1">
             <Link href='/' onClick={() => setDrawerOpen(false)}
               className="py-2.5 px-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg">
@@ -132,7 +218,12 @@ export default function Navbar() {
               className="py-2.5 px-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg">
               About
             </Link>
-
+            <SignedIn>
+              <Link href='/create-listing' onClick={() => setDrawerOpen(false)}
+                className="py-2.5 px-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg text-sm transition-colors duration-150">
+                + List Property
+              </Link>
+            </SignedIn>
             <SignedOut>
               <Link href='/sign-in' onClick={() => setDrawerOpen(false)}
                 className="py-2.5 px-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg">
@@ -142,7 +233,6 @@ export default function Navbar() {
 
             <div className="border-t border-gray-100 my-2" />
 
-            {/* Secondary nav sections */}
             {navItems.map((item, i) => (
               <div key={i}>
                 <button
@@ -164,7 +254,6 @@ export default function Navbar() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-
                 {openSection === i && (
                   <div className="ml-4 flex flex-col gap-0.5 mb-1">
                     {item.links.map((link, j) => (
@@ -183,7 +272,6 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Bottom user section */}
           <div className="mt-auto px-5 py-4 border-t border-gray-100 flex items-center gap-3">
             <SignedIn>
               <UserButton />
