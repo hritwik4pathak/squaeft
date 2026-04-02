@@ -9,7 +9,7 @@ import {
 export default async function Listing({ params }) {
     let listing = null;
     try {
-        const result = await fetch(process.env.URL + '/api/listing/get', {
+        const result = await fetch(process.env.BASE_URL + '/api/listing/get', {
             method: 'POST',
             body: JSON.stringify({ listingId: params.id }),
             cache: 'no-store',
@@ -30,7 +30,6 @@ export default async function Listing({ params }) {
         );
     }
 
-    // ✅ FIX: safely coerce prices to numbers, defaulting to 0 if undefined/null
     const regularPrice = Number(listing.regularprice ?? 0);
     const discountedPrice = Number(listing.discountedprice ?? 0);
     const displayPrice = listing.offer ? discountedPrice : regularPrice;

@@ -4,7 +4,7 @@ import Link from "next/link";
 export default async function Home() {
   let rentlistings = null;
   try {
-    const result = await fetch(process.env.URL+ '/api/listing/get', {
+    const result = await fetch(process.env.BASE_URL+ '/api/listing/get', {
         method: 'POST',
         body : JSON.stringify({
             type: 'rent',
@@ -20,7 +20,7 @@ export default async function Home() {
   }
   let salelistings = null;
   try {
-    const result = await fetch(process.env.URL+ '/api/listing/get', {
+    const result = await fetch(process.env.BASE_URL+ '/api/listing/get', {
         method: 'POST',
         body : JSON.stringify({
             type: 'sale',
@@ -37,7 +37,7 @@ export default async function Home() {
   }
   let offlistings = null;
   try {
-    const result = await fetch(process.env.URL+ '/api/listing/get', {
+    const result = await fetch(process.env.BASE_URL+ '/api/listing/get', {
         method: 'POST',
         body : JSON.stringify({
             offer: true,
