@@ -1,4 +1,5 @@
 import ListingItems from "@/components/listingitem";
+import PropertyCategories from "@/components/Propertycategories";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -75,6 +76,8 @@ export default async function Home() {
                     </div>
                 </div>
             )}
+
+            <PropertyCategories />
 
             {/* Popular Listings */}
             {popularlistings.length > 0 && (

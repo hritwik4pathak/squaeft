@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const navItems = [
   { label: "Buy", links: ["Flats in India", "Builder Floors", "Independent Houses", "Villas", "Plots"] },
@@ -75,7 +75,7 @@ function NavItem({ item, isOpen, onToggle, onClose }) {
           {item.links.map((link, j) => (
             <Link
               key={j}
-              href={`/search?q=${encodeURIComponent(link)}`}
+              href={`/Search?searchTerm=${encodeURIComponent(link)}`}
               onClick={onClose}
               className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-100"
             >

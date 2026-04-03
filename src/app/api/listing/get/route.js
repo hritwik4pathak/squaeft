@@ -9,51 +9,61 @@ export const POST = async (req) => {
         const startIndex = parseInt(data.startIndex) || 0;
         const limit = parseInt(data.limit) || 9;
 
-        // ✅ support sorting by views (popular) or updatedAt (recent)
+        // Sort
         let sortField = { updatedAt: data.order === 'asc' ? 1 : -1 };
         if (data.sortBy === 'views') {
-            sortField = { views: -1 }; // most viewed first
+            sortField = { views: -1 };
         }
 
-        let offer = data.offer;
-        if (offer === undefined || offer === 'false') {
-            offer = { $in: [false, true] };
-        }
+        // ✅ FIX: only filter by offer/parking/furnished if explicitly set to true
+        // If not provided or false, show all (don't restrict)
+        const offerFilter = data.offer === true ? { offer: true } : {};
+        const parkingFilter = data.parking === true ? { parking: true } : {};
+        const furnishedFilter = data.furnished === true ? { furnished: true } : {};
 
-        let furnished = data.furnished;
-        if (furnished === undefined || furnished === 'false') {
-            furnished = { $in: [false, true] };
-        }
+        // ✅ FIX: type filter — only restrict if a specific type is passed
+        const typeFilter =
+            data.type && data.type !== 'all'
+                ? { type: data.type }
+                : {};
 
-        let parking = data.parking;
-        if (parking === undefined || parking === 'false') {
-            parking = { $in: [false, true] };
-        }
-
-        let type = data.type;
-        if (type === undefined || type === 'all') {
-            type = { $in: ['rent', 'sale'] };
-        }
-
-        const listing = await Listing.find({
-            ...(data.userId && { userId: data.userId }),
-            ...(data.listingId && { _id: data.listingId }),
-            ...(data.searchTerm && {
+        // Search term filter
+        const searchFilter = data.searchTerm
+            ? {
                 $or: [
                     { name: { $regex: data.searchTerm, $options: 'i' } },
                     { description: { $regex: data.searchTerm, $options: 'i' } },
+                    { address: { $regex: data.searchTerm, $options: 'i' } },
                 ],
-            }),
-            offer,
-            furnished,
-            parking,
-            type,
-        })
+              }
+            : {};
+
+        // Bedroom/bathroom filters
+        const bedroomFilter = data.bedrooms ? { bedrooms: Number(data.bedrooms) } : {};
+        const bathroomFilter = data.bathrooms ? { bathrooms: Number(data.bathrooms) } : {};
+
+        // User/listing ID filters
+        const userFilter = data.userId ? { userid: data.userId } : {};
+        const listingIdFilter = data.listingId ? { _id: data.listingId } : {};
+
+        const query = {
+            ...userFilter,
+            ...listingIdFilter,
+            ...searchFilter,
+            ...typeFilter,
+            ...offerFilter,
+            ...parkingFilter,
+            ...furnishedFilter,
+            ...bedroomFilter,
+            ...bathroomFilter,
+        };
+
+        const listings = await Listing.find(query)
             .sort(sortField)
             .skip(startIndex)
             .limit(limit);
 
-        return new Response(JSON.stringify(listing), {
+        return new Response(JSON.stringify(listings), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
