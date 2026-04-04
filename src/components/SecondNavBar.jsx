@@ -1,6 +1,8 @@
 "use client";
+import { LINK_MAP, SEARCH_ROUTES } from "@/lib/routes";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+
 
 const navItems = [
   {
@@ -85,23 +87,17 @@ function NavItem({ item, isOpen, onToggle, onClose }) {
   }, [isOpen, updatePosition]);
 
   // 🔥 Routing Logic
-  const getHref = (link) => {
-    // ✅ Static Pages
-    if (link === "FAQs") return "/FAQs";
-    if (link === "Contact Us") return "/contact";
-      if (link === "Post Property Free") return "/create-listing";
 
-    if (link === "Report an Issue") return "/report";
-
-    // ✅ Default Search Routing
-    return `/Search?searchTerm=${encodeURIComponent(link)}${
-      item.label === "Rent"
-        ? "&type=rent"
-        : item.label === "Buy"
-        ? "&type=sale"
-        : ""
-    }`;
-  };
+const getHref = (link) => {
+  if (LINK_MAP[link]) return LINK_MAP[link];
+  console.log("link:", link, "→", LINK_MAP[link]);
+  const type = item.label === "Rent" ? "&type=rent" : item.label === "Buy" ? "&type=sale" : "";
+  return SEARCH_ROUTES.custom({
+  searchTerm: link,
+  ...(item.label === "Rent" && { type: "rent" }),
+  ...(item.label === "Buy"  && { type: "sale" }),
+});
+};
 
   return (
     <div className="relative flex-shrink-0">

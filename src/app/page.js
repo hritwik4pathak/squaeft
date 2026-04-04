@@ -1,13 +1,15 @@
+
 import ListingItems from "@/components/listingitem";
 import PropertyCategories from "@/components/Propertycategories";
-import Image from "next/image";
+import SearchBar from "@/components/seaarch-bar";
+import { API_ROUTES, SEARCH_ROUTES } from "@/lib/routes";
 import Link from "next/link";
 
 export default async function Home() {
     // Fetch all 4 listing types in parallel
     const fetcher = async (body) => {
         try {
-            const result = await fetch(process.env.BASE_URL + '/api/listing/get', {
+            const result = await fetch(process.env.BASE_URL + API_ROUTES.listingGet, {
                 method: 'POST',
                 body: JSON.stringify(body),
                 cache: 'no-store',
@@ -26,46 +28,21 @@ export default async function Home() {
         fetcher({ limit: 4, order: 'asc', sortBy: 'views' }), // most viewed
     ]);
 
+
     return (
-        <div className="flex flex-col gap-6 p-28 px-3 w-full mx-auto">
+        <div className="flex flex-col gap-6 pt-6 px-3 w-full mx-auto">
+            {/* Search Bar above Hero Banner */}
+            <SearchBar />
             {/* Hero Banner */}
-            <div className="relative w-full h-96 mb-6 overflow-hidden">
-                <Image
-                    src="/Assets/home-page.png"
-                    alt="Home background"
-                    fill
-                    priority
-                    sizes="100vw"
-                    className="object-cover"
-                />
-                <div className="absolute inset-0 bg-opacity-20"></div>
-                <h1 className="absolute top-8 left-8 z-20 text-slate-700 font-bold text-3xl lg:text-6xl drop-shadow-lg">
-                    Find Your <span className="text-slate-300">Dream</span>
-                    <br />
-                    Home with ease
-                </h1>
-                <div className="relative z-10 text-center px-6 flex flex-col items-center justify-center h-full">
-                    <div className="text-green-800 mt-53 text-xs sm:text-sm font-semibold drop-shadow-lg">
-                        (.....) is the best place to find your dream home.
-                        <br />
-                        We have a wide range of listings for rent and sale, as well as special offers.
-                        <br /> Whether looking for a cozy apartment or a spacious house, we have something for everyone.
-                    </div>
-                    <Link
-                        href={'/search'}
-                        className="mt-4 inline-block text-xs sm:text-sm text-white font-bold hover:underline bg-orange-500 bg-opacity-80 px-4 py-2 rounded"
-                    >
-                        Let&apos;s find your dream home
-                    </Link>
-                </div>
-            </div>
+            
 
             {/* Offer Listings */}
             {offlistings.length > 0 && (
                 <div>
                     <div className="my-3">
                         <h2 className="text-2xl font-semibold text-slate-600">Special Offers</h2>
-                        <Link className="text-sm text-blue-800 hover:underline" href={'/search?offer=true'}>
+                        <Link className="text-sm text-blue-800 hover:underline" 
+                        href={SEARCH_ROUTES.withOffer}>
                             Show more offers
                         </Link>
                     </div>
@@ -99,7 +76,8 @@ export default async function Home() {
                 <div>
                     <div className="my-3">
                         <h2 className="text-2xl font-semibold text-slate-600">Recent Places for Rent</h2>
-                        <Link className="text-sm text-blue-800 hover:underline" href={'/search?type=rent'}>
+                        <Link className="text-sm text-blue-800 hover:underline" 
+                         href={SEARCH_ROUTES.forRent}>
                             Show more rentals
                         </Link>
                     </div>
@@ -116,7 +94,8 @@ export default async function Home() {
                 <div>
                     <div className="my-3">
                         <h2 className="text-2xl font-semibold text-slate-600">Recent Places to Buy</h2>
-                        <Link className="text-sm text-blue-800 hover:underline" href={'/search?type=sale'}>
+                        <Link className="text-sm text-blue-800 hover:underline" 
+                         href={SEARCH_ROUTES.forSale}>
                             Show more properties for sale
                         </Link>
                     </div>

@@ -1,3 +1,4 @@
+import { API_ROUTES } from "@/lib/routes";
 import Image from "next/image";
 import {
     FaBath,
@@ -10,7 +11,7 @@ import {
 export default async function Listing({ params }) {
     let listing = null;
     try {
-        const result = await fetch(process.env.BASE_URL + '/api/listing/get', {
+        const result = await fetch(process.env.BASE_URL + API_ROUTES.listingGet, {
             method: 'POST',
             body: JSON.stringify({ listingId: params.id }),
             cache: 'no-store',
@@ -33,7 +34,7 @@ export default async function Listing({ params }) {
 
     // ✅ Increment view count every time this page is opened
     try {
-        await fetch(process.env.BASE_URL + '/api/listing/view', {
+        await fetch(process.env.BASE_URL + API_ROUTES.listingView, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ listingId: params.id }),

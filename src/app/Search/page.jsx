@@ -1,7 +1,8 @@
 "use client";
 import ListingItems from "@/components/listingitem";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { API_ROUTES } from "@/lib/routes";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 const SORT_OPTIONS = [
   { label: "Newest First", value: "desc" },
@@ -16,21 +17,21 @@ const DEFAULT_FILTERS = {
   parking: false,
   furnished: false,
   order: "desc",
-  minPrice: "",
-  maxPrice: "",
   bedrooms: "any",
   bathrooms: "any",
 };
 
-export default function SearchPage() {
+// ✅ Inner component that uses useSearchParams
+function SearchContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [filters, setFilters] = useState({
     ...DEFAULT_FILTERS,
     searchTerm: searchParams.get("searchTerm") || searchParams.get("q") || "",
     type: searchParams.get("type") || "all",
     offer: searchParams.get("offer") === "true",
+    parking: searchParams.get("parking") === "true",
+    furnished: searchParams.get("furnished") === "true",
   });
 
   const [listings, setListings] = useState([]);
@@ -39,24 +40,25 @@ export default function SearchPage() {
   const [showMore, setShowMore] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const fetchListings = useCallback(async (customFilters, startIndex = 0) => {
+  const fetchListings = useCallback(async (currentFilters, startIndex = 0) => {
     setLoading(true);
     try {
       const body = {
-        searchTerm: customFilters.searchTerm,
-        type: customFilters.type === "all" ? undefined : customFilters.type,
-        offer: customFilters.offer || undefined,
-        parking: customFilters.parking || undefined,
-        furnished: customFilters.furnished || undefined,
-        order: customFilters.order === "views" ? "desc" : customFilters.order,
-        sortBy: customFilters.order === "views" ? "views" : undefined,
+        ...(currentFilters.searchTerm && { searchTerm: currentFilters.searchTerm }),
+        ...(currentFilters.type !== "all" && { type: currentFilters.type }),
+        ...(currentFilters.offer && { offer: true }),
+        ...(currentFilters.parking && { parking: true }),
+        ...(currentFilters.furnished && { furnished: true }),
+        ...(currentFilters.order === "views"
+          ? { sortBy: "views" }
+          : { order: currentFilters.order }),
+        ...(currentFilters.bedrooms !== "any" && { bedrooms: Number(currentFilters.bedrooms) }),
+        ...(currentFilters.bathrooms !== "any" && { bathrooms: Number(currentFilters.bathrooms) }),
         limit: 9,
         startIndex,
-        ...(customFilters.bedrooms !== "any" && { bedrooms: Number(customFilters.bedrooms) }),
-        ...(customFilters.bathrooms !== "any" && { bathrooms: Number(customFilters.bathrooms) }),
       };
 
-      const res = await fetch("/api/listing/get", {
+      const res = await fetch(API_ROUTES.listingGet, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -72,6 +74,7 @@ export default function SearchPage() {
       setShowMore(results.length === 9);
     } catch (err) {
       console.error("Search error:", err);
+      setListings([]);
     } finally {
       setLoading(false);
     }
@@ -79,42 +82,40 @@ export default function SearchPage() {
 
   const fetchPopular = useCallback(async () => {
     try {
-      const res = await fetch("/api/listing/get", {
+      const res = await fetch(API_ROUTES.listingGet, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sortBy: "views", limit: 4 }),
       });
       const data = await res.json();
       setPopularListings(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Popular fetch error:", err);
+    } catch {
+      setPopularListings([]);
     }
   }, []);
 
-  // Initial load
- useEffect(() => {
-  const newFilters = {
-    ...DEFAULT_FILTERS,
-    type: searchParams.get("type") || "all",
-  };
-
-  setFilters(newFilters);
-  fetchListings(newFilters);
-}, [searchParams, fetchListings]);
+  // ✅ Re-run when URL params change
+  useEffect(() => {
+    const newFilters = {
+      ...DEFAULT_FILTERS,
+      searchTerm: searchParams.get("searchTerm") || searchParams.get("q") || "",
+      type: searchParams.get("type") || "all",
+      offer: searchParams.get("offer") === "true",
+      parking: searchParams.get("parking") === "true",
+      furnished: searchParams.get("furnished") === "true",
+    };
+    setFilters(newFilters);
+    fetchListings(newFilters);
+    fetchPopular();
+  }, [searchParams]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSearch = (e) => {
+  const handleApply = (e) => {
     e.preventDefault();
     fetchListings(filters);
-    setSidebarOpen(false);
-    // Update URL
-    const params = new URLSearchParams();
-    if (filters.searchTerm) params.set("searchTerm", filters.searchTerm);
-    if (filters.type !== "all") params.set("type", filters.type);
-    if (filters.offer) params.set("offer", "true");
     setSidebarOpen(false);
   };
 
@@ -123,13 +124,8 @@ export default function SearchPage() {
     fetchListings(DEFAULT_FILTERS);
   };
 
-  const handleShowMore = () => {
-    fetchListings(filters, listings.length);
-  };
-
   const FilterPanel = () => (
-    <form onSubmit={handleSearch} className="flex flex-col gap-5">
-      {/* Search Term */}
+    <form onSubmit={handleApply} className="flex flex-col gap-5">
       <div>
         <label className="text-sm font-semibold text-slate-600 mb-1 block">Keyword</label>
         <input
@@ -141,27 +137,29 @@ export default function SearchPage() {
         />
       </div>
 
-      {/* Type */}
       <div>
         <label className="text-sm font-semibold text-slate-600 mb-2 block">Property Type</label>
         <div className="flex gap-2 flex-wrap">
-          {["all", "rent", "sale"].map((t) => (
+          {[
+            { label: "All", value: "all" },
+            { label: "Rent", value: "rent" },
+            { label: "Buy", value: "sale" },
+          ].map((t) => (
             <button
-              key={t}
+              key={t.value}
               type="button"
-              onClick={() => handleFilterChange("type", t)}
+              onClick={() => handleFilterChange("type", t.value)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all
-                ${filters.type === t
+                ${filters.type === t.value
                   ? "bg-red-500 text-white border-red-500"
                   : "bg-white text-slate-600 border-gray-200 hover:border-red-300"}`}
             >
-              {t === "all" ? "All" : t === "rent" ? "Rent" : "Buy"}
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Bedrooms */}
       <div>
         <label className="text-sm font-semibold text-slate-600 mb-2 block">Bedrooms</label>
         <div className="flex gap-2 flex-wrap">
@@ -181,7 +179,6 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Bathrooms */}
       <div>
         <label className="text-sm font-semibold text-slate-600 mb-2 block">Bathrooms</label>
         <div className="flex gap-2 flex-wrap">
@@ -201,7 +198,6 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Amenities */}
       <div>
         <label className="text-sm font-semibold text-slate-600 mb-2 block">Amenities</label>
         <div className="flex flex-col gap-2">
@@ -223,7 +219,6 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Sort */}
       <div>
         <label className="text-sm font-semibold text-slate-600 mb-1 block">Sort By</label>
         <select
@@ -257,8 +252,6 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-
-      {/* Page Title */}
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-700">
           {filters.searchTerm
@@ -273,7 +266,6 @@ export default function SearchPage() {
       </div>
 
       <div className="flex gap-6">
-        {/* Sidebar — desktop */}
         <aside className="hidden lg:block w-64 flex-shrink-0">
           <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 sticky top-20">
             <h2 className="text-base font-bold text-slate-700 mb-4">Filters</h2>
@@ -281,10 +273,7 @@ export default function SearchPage() {
           </div>
         </aside>
 
-        {/* Main content */}
         <div className="flex-1 min-w-0">
-
-          {/* Mobile filter bar */}
           <div className="flex items-center justify-between mb-4 lg:hidden">
             <p className="text-sm text-slate-500">{listings.length} listings found</p>
             <button
@@ -298,7 +287,6 @@ export default function SearchPage() {
             </button>
           </div>
 
-          {/* Popular Section */}
           {popularListings.length > 0 && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-slate-600 mb-1">🔥 Popular Properties</h2>
@@ -311,7 +299,6 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Results Section */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-xl font-semibold text-slate-600">
@@ -344,7 +331,7 @@ export default function SearchPage() {
             {showMore && (
               <div className="text-center mt-8">
                 <button
-                  onClick={handleShowMore}
+                  onClick={() => fetchListings(filters, listings.length)}
                   className="px-8 py-2.5 border border-red-500 text-red-500 hover:bg-red-50 font-semibold rounded-lg text-sm transition-colors"
                 >
                   {loading ? "Loading..." : "Show More"}
@@ -355,13 +342,9 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Mobile filter drawer */}
       {sidebarOpen && (
         <>
-          <div
-            className="fixed inset-0 bg-black/40 z-50"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/40 z-50" onClick={() => setSidebarOpen(false)} />
           <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-5 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-base font-bold text-slate-700">Filters</h2>
@@ -372,5 +355,18 @@ export default function SearchPage() {
         </>
       )}
     </div>
+  );
+}
+
+// ✅ Default export wraps SearchContent in Suspense — required for useSearchParams in Next.js 15
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-slate-400 text-lg">Loading...</div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { API_ROUTES, ROUTES } from "@/lib/routes";
 import { useUser } from "@clerk/nextjs";
 import {
     getDownloadURL,
@@ -156,7 +157,7 @@ export default function CreateListing() {
                 return setError('Discounted price should be less than regular price.');
             setLoading(true);
             setError(false);
-            const res = await fetch('/api/listing/create', {
+            const res = await fetch(API_ROUTES.listingCreate, {
                 method:'POST',
                 headers:{
                     'Content-Type':'application/json',
@@ -172,7 +173,7 @@ export default function CreateListing() {
                 setError(data.message);
                 return;
             }
-            route.push(`/listing/${data.data._id}`);
+            route.push(ROUTES.listing(data.data._id));
         } catch (err){
             setError(err?.message);
             setLoading(false);

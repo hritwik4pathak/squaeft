@@ -1,9 +1,10 @@
 "use client";
+import { ROUTES } from "@/lib/routes";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaSearch } from 'react-icons/fa';
+
 
 const navItems = [
   { label: "Buy", links: ["Flats in India", "Builder Floors", "Independent Houses", "Villas", "Plots"] },
@@ -126,27 +127,7 @@ export default function Navbar() {
               <span className="text-slate-700">Estate</span>
             </h1>
           </Link>
-{/* Search with animated placeholder */}
-<form onSubmit={handleSearch} className="bg-slate-100 p-3 rounded-lg flex items-center gap-2 relative">
-  {!searchFocused && !searchValue && (
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-24 sm:w-56 pointer-events-none z-0">
-      <AnimatedPlaceholder isFocused={searchFocused} />
-    </div>
-  )}
-  <input
-    type='text'
-    name='search'
-    value={searchValue}
-    onChange={(e) => setSearchValue(e.target.value)}
-    onFocus={() => setSearchFocused(true)}
-    onBlur={() => setSearchFocused(false)}
-    className="bg-transparent focus:outline-none w-24 sm:w-64 text-sm text-slate-700 caret-slate-600 relative z-10"
-    autoComplete="off"
-  />
-  <button type="submit">
-    <FaSearch className='text-slate-600' />
-  </button>
-</form>
+
 
           {/* Desktop nav */}
           <ul className="flex gap-4 items-center">
@@ -213,18 +194,18 @@ export default function Navbar() {
               className="py-2.5 px-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg">
               Home
             </Link>
-            <Link href='/about' onClick={() => setDrawerOpen(false)}
+            <Link href={ROUTES.about} onClick={() => setDrawerOpen(false)}
               className="py-2.5 px-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg">
               About
             </Link>
             <SignedIn>
-              <Link href='/create-listing' onClick={() => setDrawerOpen(false)}
+              <Link href={ROUTES.createListing} onClick={() => setDrawerOpen(false)}
                 className="py-2.5 px-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg text-sm transition-colors duration-150">
                 + List Property
               </Link>
             </SignedIn>
             <SignedOut>
-              <Link href='/sign-in' onClick={() => setDrawerOpen(false)}
+              <Link href={ROUTES.signIn} onClick={() => setDrawerOpen(false)}
                 className="py-2.5 px-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg">
                 Sign In
               </Link>
