@@ -92,10 +92,15 @@ export default function SearchPage() {
   }, []);
 
   // Initial load
-  useEffect(() => {
-    fetchListings(filters);
-    fetchPopular();
-  }, []);
+ useEffect(() => {
+  const newFilters = {
+    ...DEFAULT_FILTERS,
+    type: searchParams.get("type") || "all",
+  };
+
+  setFilters(newFilters);
+  fetchListings(newFilters);
+}, [searchParams, fetchListings]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
