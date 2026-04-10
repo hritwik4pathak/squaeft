@@ -1,5 +1,6 @@
 "use client";
-import ListingItems from "@/components/listingitem";
+import ListingItems from "@/components/shared/listingitem";
+import ListingItemSkeleton from "@/components/shared/ListingItemSkeleton";
 import { API_ROUTES } from "@/lib/routes";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
@@ -94,7 +95,12 @@ function SearchContent() {
     }
   }, []);
 
-  // ✅ Re-run when URL params change
+  // Fetch popular listings once on mount only — doesn't depend on filters
+  useEffect(() => {
+    fetchPopular();
+  }, [fetchPopular]);
+
+  // Re-run search when URL params change
   useEffect(() => {
     const newFilters = {
       ...DEFAULT_FILTERS,
@@ -106,8 +112,7 @@ function SearchContent() {
     };
     setFilters(newFilters);
     fetchListings(newFilters);
-    fetchPopular();
-  }, [searchParams]);
+  }, [searchParams, fetchListings]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -266,7 +271,7 @@ function SearchContent() {
       </div>
 
       <div className="flex gap-6">
-        <aside className="hidden lg:block w-64 flex-shrink-0">
+        <aside className="hidden lg:block w-64 shrink-0">
           <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 sticky top-20">
             <h2 className="text-base font-bold text-slate-700 mb-4">Filters</h2>
             <FilterPanel />
@@ -311,7 +316,7 @@ function SearchContent() {
             {loading ? (
               <div className="flex flex-wrap gap-4">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="w-full sm:w-[330px] h-72 bg-gray-100 rounded-xl animate-pulse" />
+                  <ListingItemSkeleton key={i} />
                 ))}
               </div>
             ) : listings.length === 0 ? (
@@ -362,8 +367,28 @@ function SearchContent() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-slate-400 text-lg">Loading...</div>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-6">
+          <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
+          <div className="mt-1.5 w-10 h-1 bg-red-500 rounded-full" />
+        </div>
+        <div className="flex gap-6">
+          <aside className="hidden lg:block w-64 shrink-0">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5">
+              <div className="h-5 w-16 bg-gray-200 rounded animate-pulse mb-4" />
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 rounded animate-pulse mb-3" />
+              ))}
+            </div>
+          </aside>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap gap-4">
+              {[...Array(6)].map((_, i) => (
+                <ListingItemSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     }>
       <SearchContent />

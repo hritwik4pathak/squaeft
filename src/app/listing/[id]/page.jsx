@@ -1,3 +1,5 @@
+import { connect } from "@/lib/mongodb/mongoose";
+import Listing from "@/lib/models/listing.model";
 import { API_ROUTES } from "@/lib/routes";
 import Image from "next/image";
 import {
@@ -8,21 +10,31 @@ import {
     FaParking,
 } from "react-icons/fa";
 
-export default async function Listing({ params }) {
+export default async function ListingPage({ params }) {
+    // Next.js 15: params is a Promise — must be awaited
+    const { id } = await params;
+
     let listing = null;
     try {
-        const result = await fetch(process.env.BASE_URL + API_ROUTES.listingGet, {
-            method: 'POST',
-            body: JSON.stringify({ listingId: params.id }),
-            cache: 'no-store',
-        });
-        const data = await result.json();
-        listing = data?.[0] || data;
+        await connect();
+        const raw = await Listing.findById(id).lean();
+        // Serialize to strip ObjectIds, Dates, and any class instances
+        listing = raw ? JSON.parse(JSON.stringify(raw)) : null;
     } catch (error) {
-        listing = { title: 'error fetching listing' };
+        console.error("Error fetching listing:", error);
     }
 
-    if (!listing || listing === 'failed to load listing') {
+    // Increment view count — fire-and-forget, don't block render
+    if (listing) {
+        fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}${API_ROUTES.listingView}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ listingId: id }),
+            cache: "no-store",
+        }).catch(() => {});
+    }
+
+    if (!listing) {
         return (
             <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
                 <h1 className="text-xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-2xl">
@@ -30,18 +42,6 @@ export default async function Listing({ params }) {
                 </h1>
             </main>
         );
-    }
-
-    // ✅ Increment view count every time this page is opened
-    try {
-        await fetch(process.env.BASE_URL + API_ROUTES.listingView, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ listingId: params.id }),
-            cache: 'no-store',
-        });
-    } catch (_) {
-        // silently fail — don't crash the page if view tracking fails
     }
 
     const regularPrice = Number(listing.regularprice ?? 0);
@@ -63,8 +63,8 @@ export default async function Listing({ params }) {
                 </div>
                 <div className="flex flex-col max-w-4xl mx-auto p-3 my-7 gap-4">
                     <p className="text-2xl font-semibold">
-                        {listing.name} - ${' '}
-                        {displayPrice.toLocaleString('en-US')}
+                        {listing.name} - ₹{' '}
+                        {displayPrice.toLocaleString('en-IN')}
                         {listing.type === 'rent' && ' / month'}
                     </p>
                     <p className="flex items-center mt-6 gap-2 text-slate-600 text-sm">
@@ -77,7 +77,7 @@ export default async function Listing({ params }) {
                         </p>
                         {listing.offer && (
                             <p className="bg-green-900 w-full max-w-50 text-white text-center p-1 rounded-md">
-                                ${regularPrice - discountedPrice} OFF
+                                ₹{(regularPrice - discountedPrice).toLocaleString('en-IN')} OFF
                             </p>
                         )}
                     </div>
@@ -103,7 +103,6 @@ export default async function Listing({ params }) {
                             {listing.furnished ? 'Furnished' : 'Not Furnished'}
                         </li>
                     </ul>
-                    {/* ✅ Show view count */}
                     <p className="text-xs text-slate-400 mt-2">
                         👁 {(listing.views ?? 0).toLocaleString()} views
                     </p>

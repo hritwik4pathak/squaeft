@@ -27,9 +27,13 @@ export const ROUTES = {
   signIn:        "/sign-in",
   signUp:        "/sign-up",
   profile:       "/profile",
-  readMe:        "/read-me",
-  faqs:    "/FAQs",
-  contact: "/contact",
+  faqs:          "/FAQs",
+  contact:       "/contact",
+  homeLoan:       "/home-loans",
+  advice:         "/advice",
+  marketTrends:   "/market-trends",
+  pricingGuide:   "/pricing-guide",
+  homeInteriors:  "/home-interiors",
 
   // Dynamic routes — call as a function: ROUTES.listing(id)
   listing:       (id) => `/listing/${id}`,
@@ -77,7 +81,6 @@ export const API_ROUTES = {
   listingUpdate: "/api/listing/update",
   listingView:   "/api/listing/view",
   webhook:       "/api/webhook",
-  
 };
 
 // ── Static nav link resolver ─────────────────────────────────
@@ -99,28 +102,28 @@ export const LINK_MAP = {
   // ── Sell ─────────────────────────────────────────────────
   "Post Property Free":   ROUTES.createListing,
   "Seller Dashboard":     ROUTES.profile,
-  "Pricing Guide":        SEARCH_ROUTES.forSale,
+  "Pricing Guide":        ROUTES.pricingGuide,
 
   // ── Home Loans ───────────────────────────────────────────
-  "Check Eligibility":    ROUTES.search,
-  "EMI Calculator":       ROUTES.search,
-  "Compare Banks":        ROUTES.search,
-  "Apply Now":            ROUTES.search,
+  "Check Eligibility":    ROUTES.homeLoan,
+  "EMI Calculator":       ROUTES.homeLoan,
+  "Compare Banks":        ROUTES.homeLoan,
+  "Apply Now":            ROUTES.homeLoan,
 
   // ── Home Interiors ───────────────────────────────────────
-  "Modular Kitchen":      SEARCH_ROUTES.modularKitchen,
-  "Living Room":          SEARCH_ROUTES.livingRoom,
-  "Bedroom":              SEARCH_ROUTES.bedroom,
-  "Full Home Design":     SEARCH_ROUTES.fullHomeDesign,
+  "Modular Kitchen":      ROUTES.homeInteriors,
+  "Living Room":          ROUTES.homeInteriors,
+  "Bedroom":              ROUTES.homeInteriors,
+  "Full Home Design":     ROUTES.homeInteriors,
 
   // ── Advice ───────────────────────────────────────────────
-  "Buying Guide":         SEARCH_ROUTES.forSale,
-  "Renting Tips":         SEARCH_ROUTES.forRent,
-  "Legal Help":           ROUTES.search,
-  "Market Trends":        ROUTES.search,
+  "Buying Guide":         ROUTES.advice,
+  "Renting Tips":         ROUTES.advice,
+  "Legal Help":           ROUTES.advice,
+  "Market Trends":        ROUTES.marketTrends,
 
   // ── Help ─────────────────────────────────────────────────
-  "FAQs":            ROUTES.faqs,
-"Contact Us":      ROUTES.contact,
-"Report an Issue": ROUTES.about,
+  "FAQs":             ROUTES.faqs,
+  "Contact Us":       ROUTES.contact,
+  "Report an Issue":  ROUTES.contact,
 };

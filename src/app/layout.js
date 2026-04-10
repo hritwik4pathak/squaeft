@@ -1,5 +1,5 @@
-import Navbar from "@/components/Navbar";
-import SecondaryNav from "@/components/SecondNavBar";
+import Navbar from "@/components/layout/Navbar";
+import SecondaryNav from "@/components/layout/SecondNavBar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -21,7 +21,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider> 
+    <ClerkProvider dynamic>
 
     <html lang="en">
       <body

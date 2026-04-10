@@ -1,47 +1,38 @@
 
-import ListingItems from "@/components/listingitem";
-import PropertyCategories from "@/components/Propertycategories";
-import SearchBar from "@/components/seaarch-bar";
-import { API_ROUTES, SEARCH_ROUTES } from "@/lib/routes";
+import ListingItems from "@/components/shared/listingitem";
+import PropertyCategories from "@/components/home/Propertycategories";
+import SearchBar from "@/components/home/seaarch-bar";
+import { connect } from "@/lib/mongodb/mongoose";
+import Listing from "@/lib/models/listing.model";
+import { SEARCH_ROUTES } from "@/lib/routes";
 import Link from "next/link";
 
+async function getListings(query, sort, limit) {
+    await connect();
+    const results = await Listing.find(query).sort(sort).limit(limit).lean();
+    // lean() returns plain objects — serialize _id and dates for client components
+    return JSON.parse(JSON.stringify(results));
+}
+
 export default async function Home() {
-    // Fetch all 4 listing types in parallel
-    const fetcher = async (body) => {
-        try {
-            const result = await fetch(process.env.BASE_URL + API_ROUTES.listingGet, {
-                method: 'POST',
-                body: JSON.stringify(body),
-                cache: 'no-store',
-            });
-            const data = await result.json();
-            return Array.isArray(data) ? data : [];
-        } catch {
-            return [];
-        }
-    };
-
     const [rentlistings, salelistings, offlistings, popularlistings] = await Promise.all([
-        fetcher({ type: 'rent', limit: 4, order: 'asc' }),
-        fetcher({ type: 'sale', limit: 4, order: 'asc' }),
-        fetcher({ offer: true, limit: 4, order: 'asc' }),
-        fetcher({ limit: 4, order: 'asc', sortBy: 'views' }), // most viewed
+        getListings({ type: 'rent' },          { updatedAt: 1 }, 4),
+        getListings({ type: 'sale' },          { updatedAt: 1 }, 4),
+        getListings({ offer: true },           { updatedAt: 1 }, 4),
+        getListings({},                        { views: -1 },    4),
     ]);
-
 
     return (
         <div className="flex flex-col gap-6 pt-6 px-3 w-full mx-auto">
             {/* Search Bar above Hero Banner */}
             <SearchBar />
-            {/* Hero Banner */}
-            
 
             {/* Offer Listings */}
             {offlistings.length > 0 && (
                 <div>
                     <div className="my-3">
                         <h2 className="text-2xl font-semibold text-slate-600">Special Offers</h2>
-                        <Link className="text-sm text-blue-800 hover:underline" 
+                        <Link className="text-sm text-blue-800 hover:underline"
                         href={SEARCH_ROUTES.withOffer}>
                             Show more offers
                         </Link>
@@ -76,7 +67,7 @@ export default async function Home() {
                 <div>
                     <div className="my-3">
                         <h2 className="text-2xl font-semibold text-slate-600">Recent Places for Rent</h2>
-                        <Link className="text-sm text-blue-800 hover:underline" 
+                        <Link className="text-sm text-blue-800 hover:underline"
                          href={SEARCH_ROUTES.forRent}>
                             Show more rentals
                         </Link>
@@ -94,7 +85,7 @@ export default async function Home() {
                 <div>
                     <div className="my-3">
                         <h2 className="text-2xl font-semibold text-slate-600">Recent Places to Buy</h2>
-                        <Link className="text-sm text-blue-800 hover:underline" 
+                        <Link className="text-sm text-blue-800 hover:underline"
                          href={SEARCH_ROUTES.forSale}>
                             Show more properties for sale
                         </Link>

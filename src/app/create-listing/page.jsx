@@ -9,7 +9,7 @@ import {
     uploadBytesResumable
 } from "firebase/storage";
 import { useRouter } from "next/navigation";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { app } from '../../firebase';
 
 export default function CreateListing() {
@@ -19,7 +19,30 @@ export default function CreateListing() {
     const [imageUploadError, setImageUploadError] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const route = useRouter();
+
+    // If user is signed in but userMongoId is missing, sync the account first
+    useEffect(() => {
+        if (!isLoaded || !isSignedIn || !user) return;
+        if (user.publicMetadata?.userMongoId) return;
+
+        const sync = async () => {
+            setSyncing(true);
+            try {
+                const res = await fetch('/api/user/ensure-synced', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    await user.reload(); // refresh session so publicMetadata is up to date
+                }
+            } catch (err) {
+                console.error('Sync error:', err);
+            } finally {
+                setSyncing(false);
+            }
+        };
+        sync();
+    }, [isLoaded, isSignedIn, user]);
     const [formData, setFormData] = useState({
          imageUrls: [],
          name: '',
@@ -182,6 +205,15 @@ export default function CreateListing() {
 
 
 
+
+      if (syncing) {
+        return (
+            <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-3'>
+                <div className='w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin' />
+                <p className='text-slate-500 text-sm'>Setting up your account, please wait...</p>
+            </main>
+        );
+      }
 
       return(
         <main className='p-3 max-w-4xl mx-auto'>
