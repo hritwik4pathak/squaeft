@@ -58,10 +58,14 @@ export const POST = async (req) => {
             ...bathroomFilter,
         };
 
-        const listings = await Listing.find(query)
+        const raw = await Listing.find(query)
             .sort(sortField)
             .skip(startIndex)
-            .limit(limit);
+            .limit(limit)
+            .lean();
+
+        // Serialize: strip ObjectIds, Dates, and any Mongoose class instances
+        const listings = JSON.parse(JSON.stringify(raw));
 
         return new Response(JSON.stringify(listings), {
             status: 200,

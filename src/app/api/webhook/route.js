@@ -15,8 +15,8 @@ throw new Error(
 // ✅ Create Svix instance
 const wh = new Webhook(SIGNING_SECRET);
 
-// ✅ Get headers (NO await)
-const headerPayload = headers();
+// Next.js 15: headers() returns a Promise — must be awaited
+const headerPayload = await headers();
 const svix_id = headerPayload.get('svix-id');
 const svix_timestamp = headerPayload.get('svix-timestamp');
 const svix_signature = headerPayload.get('svix-signature');
@@ -64,9 +64,10 @@ try {
   // ✅ Update Clerk metadata
   if (user && eventType === 'user.created') {
     try {
-      await clerkClient.users.updateUserMetadata(id, {
+      const client = await clerkClient();
+      await client.users.updateUserMetadata(id, {
         publicMetadata: {
-          userMongoId: user._id?.toString(), // ✅ FIX
+          userMongoId: user._id?.toString(),
         },
       });
     } catch (error) {

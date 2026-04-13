@@ -206,7 +206,34 @@ export default function CreateListing() {
 
 
 
-      if (syncing) {
+      // Clerk still initialising
+      if (!isLoaded) {
+        return (
+          <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-3'>
+            <div className='w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin' />
+            <p className='text-slate-500 text-sm'>Loading...</p>
+          </main>
+        );
+      }
+
+      // Not signed in — block the page entirely
+      if (!isSignedIn) {
+        return (
+          <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-4'>
+            <p className='text-2xl font-semibold text-slate-700'>Sign in required</p>
+            <p className='text-slate-500 text-sm'>You must be signed in to create a listing.</p>
+            <a
+              href={ROUTES.signIn}
+              className='bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors'
+            >
+              Sign In
+            </a>
+          </main>
+        );
+      }
+
+      // Signed in but account is being synced / metadata not ready yet
+      if (syncing || !user?.publicMetadata?.userMongoId) {
         return (
             <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-3'>
                 <div className='w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin' />

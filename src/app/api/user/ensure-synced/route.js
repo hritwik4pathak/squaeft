@@ -32,7 +32,7 @@ export const POST = async () => {
     // Write userMongoId back to Clerk publicMetadata
     const client = await clerkClient();
     await client.users.updateUserMetadata(user.id, {
-      publicMetadata: { userMongoId: mongoUser._id },
+      publicMetadata: { userMongoId: mongoUser._id.toString() },
     });
 
     return new Response(

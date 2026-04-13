@@ -10,6 +10,7 @@ import { useEffect, useState } from "react"
 import { app } from "@/firebase"
 import { useUser } from "@clerk/nextjs"
 import { usePathname, useRouter } from "next/navigation"
+import { ROUTES } from "@/lib/routes"
 export default function UpdateListing() {
     const {isSignedIn, user,isLoaded} = useUser()
     const [files, setFiles] = useState([]);
@@ -46,7 +47,8 @@ export default function UpdateListing() {
         fetchListing();
     },[]);
     const [imageUploadError, setImageUploadError] = useState(false);
-    const [imageUploading, setimageUploading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const router = useRouter();
     const handleImageSubmit = (e) => {
@@ -57,7 +59,7 @@ export default function UpdateListing() {
             for(let i=0; i<files.length; i++){
                 promises.push(storeImage(files[i]));
             }
-            promises.all(promises)
+            Promise.all(promises)
                 .then((urls)=>{
                     setFormData({
                         ...formData,
@@ -123,9 +125,9 @@ export default function UpdateListing() {
             });
         }
         if (
-            e.target.id === "number" ||
-            e.target.id === "text" ||
-            e.target.id === "textarea" 
+            e.target.type === "number" ||
+            e.target.type === "text" ||
+            e.target.tagName.toLowerCase() === "textarea"
         ){
             setFormData({
                 ...formData,
@@ -162,9 +164,36 @@ export default function UpdateListing() {
             setLoading(false);  
         }
     };
-    if (!isLoaded){
-        return( 
-            <h1 className="text-center text-xl font-medium my-7">Loading...</h1>
+    if (!isLoaded) {
+        return (
+            <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-3'>
+                <div className='w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin' />
+                <p className='text-slate-500 text-sm'>Loading...</p>
+            </main>
+        );
+    }
+
+    if (!isSignedIn) {
+        return (
+            <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-4'>
+                <p className='text-2xl font-semibold text-slate-700'>Sign in required</p>
+                <p className='text-slate-500 text-sm'>You must be signed in to update a listing.</p>
+                <a
+                    href={ROUTES.signIn}
+                    className='bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors'
+                >
+                    Sign In
+                </a>
+            </main>
+        );
+    }
+
+    if (!user?.publicMetadata?.userMongoId) {
+        return (
+            <main className='p-3 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-3'>
+                <div className='w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin' />
+                <p className='text-slate-500 text-sm'>Setting up your account, please wait...</p>
+            </main>
         );
     }
 
@@ -318,10 +347,10 @@ export default function UpdateListing() {
                         />
                         <button
                             type='button'
-                            disabled={imageUploading}
+                            disabled={uploading}
                             onClick={handleImageSubmit}
                             className='border border-black text-green-700 p-3 rounded-lg'>
-                            {imageUploading ? 'Uploading...' : 'Upload Images'}
+                            {uploading ? 'Uploading...' : 'Upload Images'}
                         </button>
                     </div>
                     <p className='text-red-500 text-sm'>
@@ -348,9 +377,9 @@ export default function UpdateListing() {
                             </div>
                         ))}
                     <button className='bg-slate-700 text-white p-3 rounded-lg'
-                        disabled={imageUploading}
+                        disabled={loading || uploading}
                     >
-                        Update Listing
+                        {loading ? 'Updating...' : 'Update Listing'}
                     </button>
                     {error && <p className='text-red-700 text-sm mt-2'>{error}</p>}
                 </div>
