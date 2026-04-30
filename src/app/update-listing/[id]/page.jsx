@@ -31,6 +31,15 @@ export default function UpdateListing() {
         offer: false,
     });
     useEffect(() => {
+        if (!isLoaded || !isSignedIn || !user) return;
+        if (user.publicMetadata?.userMongoId) return;
+        fetch('/api/user/ensure-synced', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => { if (data.success) user.reload(); })
+            .catch(err => console.error('Sync error:', err));
+    }, [isLoaded, isSignedIn, user]);
+
+    useEffect(() => {
         const fetchListing = async () => {
             const res = await fetch('/api/listing/get',{
                 method: 'POST',

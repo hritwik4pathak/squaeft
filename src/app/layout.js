@@ -1,5 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import SecondaryNav from "@/components/layout/SecondNavBar";
+import UserSync from "@/components/shared/UserSync";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -29,6 +30,7 @@ export default function RootLayout({ children }) {
         >
         <Navbar />
         <SecondaryNav />
+        <UserSync />
         {children}
       </body>
     </html>
