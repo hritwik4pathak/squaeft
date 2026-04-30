@@ -11,18 +11,35 @@ export const createOrUpdateUser = async (
 ) => {
   try {
     await connect();
-    const user = await User.findOneAndUpdate(
+    const email = email_addresses[0]?.email_address ?? email_addresses[0]?.emailAddress;
+    const fields = {
+      firstName: first_name || '',
+      lastName: last_name || '',
+      profilePicture: image_url,
+      email,
+    };
+
+    // 1. Try to find and update by clerkId (normal path)
+    let user = await User.findOneAndUpdate(
       { clerkId: id },
-      {
-        $set: {
-          firstName: first_name || '',
-          lastName: last_name || '',
-          profilePicture: image_url,
-          email: email_addresses[0]?.email_address ?? email_addresses[0]?.emailAddress,
-        },
-      },
-      { upsert: true, new: true }
+      { $set: fields },
+      { new: true }
     );
+
+    // 2. Stale record exists with same email but wrong clerkId — claim it
+    if (!user && email) {
+      user = await User.findOneAndUpdate(
+        { email },
+        { $set: { clerkId: id, ...fields } },
+        { new: true }
+      );
+    }
+
+    // 3. Truly new user
+    if (!user) {
+      user = await User.create({ clerkId: id, ...fields });
+    }
+
     return user;
   } catch (error) {
     console.log('Error: Could not create or update user:', error);
