@@ -4,20 +4,29 @@ import ListingItemSkeleton from "@/components/shared/ListingItemSkeleton";
 import FilterPanel, { DEFAULT_FILTERS } from "@/components/search/FilterPanel";
 import { API_ROUTES } from "@/lib/routes";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ✅ Inner component that uses useSearchParams
 function SearchContent() {
   const searchParams = useSearchParams();
 
-  const [filters, setFilters] = useState({
+  const urlFilters = useMemo(() => ({
     ...DEFAULT_FILTERS,
     searchTerm: searchParams.get("searchTerm") || searchParams.get("q") || "",
     type: searchParams.get("type") || "all",
     offer: searchParams.get("offer") === "true",
     parking: searchParams.get("parking") === "true",
     furnished: searchParams.get("furnished") === "true",
-  });
+  }), [searchParams]);
+
+  const [filters, setFilters] = useState(urlFilters);
+  const [prevUrlFilters, setPrevUrlFilters] = useState(urlFilters);
+
+  // Sync panel filters when URL changes — setState during render, not in an effect
+  if (prevUrlFilters !== urlFilters) {
+    setPrevUrlFilters(urlFilters);
+    setFilters(urlFilters);
+  }
 
   const [listings, setListings] = useState([]);
   const [popularListings, setPopularListings] = useState([]);
@@ -65,38 +74,29 @@ function SearchContent() {
     }
   }, []);
 
-  const fetchPopular = useCallback(async () => {
-    try {
-      const res = await fetch(API_ROUTES.listingGet, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sortBy: "views", limit: 4 }),
-      });
-      const data = await res.json();
-      setPopularListings(Array.isArray(data) ? data : []);
-    } catch {
-      setPopularListings([]);
-    }
-  }, []);
+  const fetchListingsRef = useRef(fetchListings);
 
-  // Fetch popular listings once on mount only — doesn't depend on filters
+  // Keep ref current — runs before the URL-change effect below (effects run in order)
   useEffect(() => {
-    fetchPopular();
-  }, [fetchPopular]);
+    fetchListingsRef.current = fetchListings;
+  });
+
+  // Fetch popular listings once on mount — setState only in .then(), not synchronously
+  useEffect(() => {
+    fetch(API_ROUTES.listingGet, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sortBy: "views", limit: 4 }),
+    })
+      .then(r => r.json())
+      .then(data => setPopularListings(Array.isArray(data) ? data : []))
+      .catch(() => setPopularListings([]));
+  }, []);
 
   // Re-run search when URL params change
   useEffect(() => {
-    const newFilters = {
-      ...DEFAULT_FILTERS,
-      searchTerm: searchParams.get("searchTerm") || searchParams.get("q") || "",
-      type: searchParams.get("type") || "all",
-      offer: searchParams.get("offer") === "true",
-      parking: searchParams.get("parking") === "true",
-      furnished: searchParams.get("furnished") === "true",
-    };
-    setFilters(newFilters);
-    fetchListings(newFilters);
-  }, [searchParams, fetchListings]);
+    fetchListingsRef.current(urlFilters);
+  }, [urlFilters]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
