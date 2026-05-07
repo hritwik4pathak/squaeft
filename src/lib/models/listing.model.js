@@ -54,10 +54,13 @@ const listingSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        // ✅ NEW: track how many times this listing page has been opened
         views: {
             type: Number,
             default: 0,
+        },
+        whatsappNumber: {
+            type: String,
+            default: '',
         },
     },
     {

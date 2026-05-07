@@ -29,6 +29,7 @@ export default function UpdateListing() {
         furnished: false,
         parking: false,
         offer: false,
+        whatsappNumber: "",
     });
     useEffect(() => {
         if (!isLoaded || !isSignedIn || !user) return;
@@ -241,6 +242,15 @@ export default function UpdateListing() {
                         required
                         onChange={handleChange}
                         value={formData.address}
+                    />
+                    <input
+                        type='tel'
+                        placeholder='WhatsApp Number (e.g. +91 98765 43210)'
+                        className='border p-3 rounded-lg'
+                        id='whatsappNumber'
+                        required
+                        onChange={handleChange}
+                        value={formData.whatsappNumber}
                     />
                     <div className='flex flex-wrap gap-6'>
                         <div className='gap-2 flex'>

@@ -1,50 +1,63 @@
 import Listing from "@/lib/models/listing.model";
 import { connect } from "@/lib/mongodb/mongoose";
+import {
+    cleanBool,
+    cleanInt,
+    cleanString,
+    escapeRegex,
+    isValidObjectId,
+} from "@/lib/security/sanitize";
 
 export const POST = async (req) => {
     try {
         await connect();
-        const data = await req.json();
+        const data = await req.json().catch(() => ({}));
 
-        const startIndex = parseInt(data.startIndex) || 0;
-        const limit = parseInt(data.limit) || 9;
+        const startIndex = cleanInt(data.startIndex, { min: 0, max: 10_000, fallback: 0 });
+        const limit = cleanInt(data.limit, { min: 1, max: 50, fallback: 9 });
 
-        // Sort
+        // Sort — whitelist only known fields/orders
         let sortField = { updatedAt: data.order === 'asc' ? 1 : -1 };
         if (data.sortBy === 'views') {
             sortField = { views: -1 };
         }
 
-        // ✅ FIX: only filter by offer/parking/furnished if explicitly set to true
-        // If not provided or false, show all (don't restrict)
-        const offerFilter = data.offer === true ? { offer: true } : {};
-        const parkingFilter = data.parking === true ? { parking: true } : {};
-        const furnishedFilter = data.furnished === true ? { furnished: true } : {};
+        const offerFilter = cleanBool(data.offer) ? { offer: true } : {};
+        const parkingFilter = cleanBool(data.parking) ? { parking: true } : {};
+        const furnishedFilter = cleanBool(data.furnished) ? { furnished: true } : {};
 
-        // ✅ FIX: type filter — only restrict if a specific type is passed
-        const typeFilter =
-            data.type && data.type !== 'all'
-                ? { type: data.type }
-                : {};
+        const typeWhitelist = new Set(['rent', 'sale']);
+        const typeFilter = typeWhitelist.has(data.type) ? { type: data.type } : {};
 
-        // Search term filter
-        const searchFilter = data.searchTerm
-            ? {
-                $or: [
-                    { name: { $regex: data.searchTerm, $options: 'i' } },
-                    { description: { $regex: data.searchTerm, $options: 'i' } },
-                    { address: { $regex: data.searchTerm, $options: 'i' } },
-                ],
-              }
+        // Search term: coerce to string, cap length, escape regex specials.
+        // This blocks NoSQL operator injection (`{ "$ne": null }`) and regex DoS.
+        const rawSearch = cleanString(data.searchTerm, { max: 100 });
+        const searchFilter = rawSearch
+            ? (() => {
+                const safe = escapeRegex(rawSearch);
+                return {
+                    $or: [
+                        { name: { $regex: safe, $options: 'i' } },
+                        { description: { $regex: safe, $options: 'i' } },
+                        { address: { $regex: safe, $options: 'i' } },
+                    ],
+                };
+            })()
             : {};
 
-        // Bedroom/bathroom filters
-        const bedroomFilter = data.bedrooms ? { bedrooms: Number(data.bedrooms) } : {};
-        const bathroomFilter = data.bathrooms ? { bathrooms: Number(data.bathrooms) } : {};
+        const bedroomFilter =
+            data.bedrooms !== undefined && data.bedrooms !== null && data.bedrooms !== ''
+                ? { bedrooms: cleanInt(data.bedrooms, { min: 1, max: 20, fallback: 1 }) }
+                : {};
+        const bathroomFilter =
+            data.bathrooms !== undefined && data.bathrooms !== null && data.bathrooms !== ''
+                ? { bathrooms: cleanInt(data.bathrooms, { min: 1, max: 20, fallback: 1 }) }
+                : {};
 
-        // User/listing ID filters
-        const userFilter = data.userId ? { userid: data.userId } : {};
-        const listingIdFilter = data.listingId ? { _id: data.listingId } : {};
+        // ID filters: only accept valid ObjectIds; otherwise return no results
+        // for that filter rather than letting an injected operator through.
+        const userFilter = isValidObjectId(data.userId) ? { userid: data.userId } : {};
+        const listingIdFilter = isValidObjectId(data.listingId) ? { _id: data.listingId } : {};
 
         const query = {
             ...userFilter,
@@ -64,18 +77,16 @@ export const POST = async (req) => {
             .limit(limit)
             .lean();
 
-        // Serialize: strip ObjectIds, Dates, and any Mongoose class instances
         const listings = JSON.parse(JSON.stringify(raw));
 
         return new Response(JSON.stringify(listings), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
-
     } catch (error) {
         console.error('Error getting listing:', error);
         return new Response(
-            JSON.stringify({ success: false, message: error.message }),
+            JSON.stringify({ success: false, message: 'Something went wrong' }),
             { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
     }

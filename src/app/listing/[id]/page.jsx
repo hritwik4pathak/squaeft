@@ -1,30 +1,37 @@
 import { connect } from "@/lib/mongodb/mongoose";
 import Listing from "@/lib/models/listing.model";
+import User from "@/lib/models/user.model";
 import { API_ROUTES } from "@/lib/routes";
-import Image from "next/image";
 import {
     FaBath,
     FaBed,
     FaChair,
     FaMapMarkerAlt,
     FaParking,
+    FaWhatsapp,
 } from "react-icons/fa";
+import ImageGallery from "@/components/shared/ImageGallery";
 
 export default async function ListingPage({ params }) {
-    // Next.js 15: params is a Promise — must be awaited
     const { id } = await params;
 
     let listing = null;
+    let seller = null;
+
     try {
         await connect();
-        const raw = await Listing.findById(id).lean();
-        // Serialize to strip ObjectIds, Dates, and any class instances
-        listing = raw ? JSON.parse(JSON.stringify(raw)) : null;
+        const rawListing = await Listing.findById(id).lean();
+        listing = rawListing ? JSON.parse(JSON.stringify(rawListing)) : null;
+
+        if (listing?.userid) {
+            const rawSeller = await User.findById(listing.userid).lean();
+            seller = rawSeller ? JSON.parse(JSON.stringify(rawSeller)) : null;
+        }
     } catch (error) {
         console.error("Error fetching listing:", error);
     }
 
-    // Increment view count — fire-and-forget, don't block render
+    // Fire-and-forget view counter
     if (listing) {
         fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}${API_ROUTES.listingView}`, {
             method: "POST",
@@ -48,64 +55,140 @@ export default async function ListingPage({ params }) {
     const discountedPrice = Number(listing.discountedprice ?? 0);
     const displayPrice = listing.offer ? discountedPrice : regularPrice;
 
+    const formatPrice = (price) => {
+        if (price >= 10000000) return `₹${(price / 10000000).toFixed(2)} Cr`;
+        if (price >= 100000) return `₹${(price / 100000).toFixed(0)} Lac`;
+        return `₹${price.toLocaleString("en-IN")}`;
+    };
+
+    const sellerName = seller
+        ? `${seller.firstName}${seller.lastName ? " " + seller.lastName : ""}`
+        : "Property Owner";
+
+    const waNumber = listing.whatsappNumber?.replace(/\D/g, "");
+    const waLink = waNumber ? `https://wa.me/${waNumber}` : null;
+
     return (
-        <main>
-            <div>
-                <div className="relative w-full h-[400px]">
-                    <Image
-                        src={listing?.imageUrls?.[0] || "https://placehold.co/800x400?text=No+Image"}
-                        alt={listing?.name || "Listing"}
-                        fill
-                        priority
-                        sizes="100vw"
-                        className="object-cover"
-                    />
-                </div>
-                <div className="flex flex-col max-w-4xl mx-auto p-3 my-7 gap-4">
-                    <p className="text-2xl font-semibold">
-                        {listing.name} - ₹{' '}
-                        {displayPrice.toLocaleString('en-IN')}
-                        {listing.type === 'rent' && ' / month'}
-                    </p>
-                    <p className="flex items-center mt-6 gap-2 text-slate-600 text-sm">
-                        <FaMapMarkerAlt className="text-green-700" />
+        <main className="max-w-5xl mx-auto px-4 py-8">
+            {/* Photo gallery */}
+            <ImageGallery images={listing.imageUrls} name={listing.name} />
+
+            <div className="mt-8 flex flex-col lg:flex-row gap-8">
+                {/* Left — property details */}
+                <div className="flex-1 flex flex-col gap-5">
+                    {/* Title & price */}
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800">{listing.name}</h1>
+                        <p className="text-2xl font-semibold text-slate-700 mt-1">
+                            {formatPrice(displayPrice)}
+                            {listing.type === "rent" && (
+                                <span className="text-base font-normal text-slate-400"> / month</span>
+                            )}
+                        </p>
+                    </div>
+
+                    {/* Badges */}
+                    <div className="flex gap-3 flex-wrap">
+                        <span className={`text-white text-sm font-semibold px-4 py-1.5 rounded-full
+                            ${listing.type === "rent" ? "bg-blue-600" : "bg-red-600"}`}>
+                            {listing.type === "rent" ? "For Rent" : "For Sale"}
+                        </span>
+                        {listing.offer && (
+                            <span className="bg-green-600 text-white text-sm font-semibold px-4 py-1.5 rounded-full">
+                                {formatPrice(regularPrice - discountedPrice)} OFF
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Address */}
+                    <p className="flex items-start gap-2 text-slate-600 text-sm">
+                        <FaMapMarkerAlt className="text-green-600 mt-0.5 shrink-0" />
                         {listing.address}
                     </p>
-                    <div className="flex gap-4">
-                        <p className="bg-red-900 w-full max-w-50 text-white text-center p-1 rounded-md">
-                            {listing.type === 'rent' ? 'For Rent' : 'For Sale'}
+
+                    {/* Description */}
+                    <div>
+                        <p className="text-sm font-semibold text-slate-800 mb-1">Description</p>
+                        <p className="text-slate-600 text-sm leading-relaxed">{listing.description}</p>
+                    </div>
+
+                    {/* Features */}
+                    <ul className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                        <li className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                            <FaBed className="text-slate-500" />
+                            {listing.bedrooms} {listing.bedrooms > 1 ? "Beds" : "Bed"}
+                        </li>
+                        <li className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                            <FaBath className="text-slate-500" />
+                            {listing.bathrooms} {listing.bathrooms > 1 ? "Baths" : "Bath"}
+                        </li>
+                        <li className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                            <FaParking className="text-slate-500" />
+                            {listing.parking ? "Parking Spot" : "No Parking"}
+                        </li>
+                        <li className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                            <FaChair className="text-slate-500" />
+                            {listing.furnished ? "Furnished" : "Not Furnished"}
+                        </li>
+                    </ul>
+
+                    <p className="text-xs text-slate-400">
+                        👁 {(listing.views ?? 0).toLocaleString()} views
+                    </p>
+                </div>
+
+                {/* Right — seller contact card */}
+                <div className="w-full lg:w-72 shrink-0">
+                    <div className="border border-gray-200 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                            Listed by
                         </p>
-                        {listing.offer && (
-                            <p className="bg-green-900 w-full max-w-50 text-white text-center p-1 rounded-md">
-                                ₹{(regularPrice - discountedPrice).toLocaleString('en-IN')} OFF
+
+                        {/* Seller info */}
+                        <div className="flex items-center gap-3">
+                            {seller?.profilePicture ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={seller.profilePicture}
+                                    alt={sellerName}
+                                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-lg">
+                                    {sellerName.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            <div>
+                                <p className="font-semibold text-slate-800">{sellerName}</p>
+                                {seller?.email && (
+                                    <p className="text-xs text-slate-400 truncate">{seller.email}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* WhatsApp contact */}
+                        {waLink ? (
+                            <a
+                                href={waLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-150"
+                            >
+                                <FaWhatsapp className="text-xl" />
+                                Chat on WhatsApp
+                            </a>
+                        ) : (
+                            <p className="text-xs text-slate-400 text-center">
+                                No WhatsApp number provided
+                            </p>
+                        )}
+
+                        {listing.whatsappNumber && (
+                            <p className="text-center text-sm text-slate-500">
+                                {listing.whatsappNumber}
                             </p>
                         )}
                     </div>
-                    <p className="text-slate-800">
-                        <span className="font-semibold text-black">Description - </span>
-                        {listing.description}
-                    </p>
-                    <ul className="text-green-900 font-semibold text-sm flex flex-wrap items-center gap-4 sm:gap-6">
-                        <li className="flex items-center gap-1 whitespace-nowrap">
-                            <FaBed className="text-lg" />
-                            {listing.bedrooms > 1 ? `${listing.bedrooms} Beds` : `${listing.bedrooms} Bed`}
-                        </li>
-                        <li className="flex items-center gap-1 whitespace-nowrap">
-                            <FaBath className="text-lg" />
-                            {listing.bathrooms > 1 ? `${listing.bathrooms} Baths` : `${listing.bathrooms} Bath`}
-                        </li>
-                        <li className="flex items-center gap-1 whitespace-nowrap">
-                            <FaParking className="text-lg" />
-                            {listing.parking ? 'Parking Spot' : 'No Parking'}
-                        </li>
-                        <li className="flex items-center gap-1 whitespace-nowrap">
-                            <FaChair className="text-lg" />
-                            {listing.furnished ? 'Furnished' : 'Not Furnished'}
-                        </li>
-                    </ul>
-                    <p className="text-xs text-slate-400 mt-2">
-                        👁 {(listing.views ?? 0).toLocaleString()} views
-                    </p>
                 </div>
             </div>
         </main>

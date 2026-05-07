@@ -56,7 +56,7 @@ export default function CreateListing() {
          offer: false,
          parking: false,
          furnished: false,
-    
+         whatsappNumber: '',
     });
 
     console.log(formData);
@@ -279,7 +279,16 @@ export default function CreateListing() {
                           onChange={handleChange}
                           value={formData.address}
                           />
-                
+                    <input
+                          type='tel'
+                          placeholder='WhatsApp Number (e.g. +91 98765 43210)'
+                          className='border p-3 rounded-lg'
+                          id='whatsappNumber'
+                          required
+                          onChange={handleChange}
+                          value={formData.whatsappNumber}
+                          />
+
                 <div className='flex flex-wrap gap-6'>
                     <div className='gap-2 flex'>
                          <input type='checkbox' id='sale' className='w-5' 

@@ -41,6 +41,9 @@ export const POST = async () => {
     );
   } catch (error) {
     console.error('ensure-synced error:', error);
-    return new Response(JSON.stringify({ success: false, message: error.message }), { status: 500 });
+    return new Response(
+      JSON.stringify({ success: false, message: 'Something went wrong' }),
+      { status: 500 }
+    );
   }
 };
