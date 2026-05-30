@@ -131,6 +131,7 @@ export default function CreateListing() {
       ...prev,
       type: id,
     }));
+    
     return;
   }
 
