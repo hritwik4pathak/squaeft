@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^5.7.6",
+    "@supabase/supabase-js": "^2.116.0",
     "firebase": "^12.9.0",
     "mongodb": "^7.1.0",
     "mongoose": "^8.23.0",

@@ -2,16 +2,10 @@
 
 import { API_ROUTES, ROUTES } from "@/lib/routes";
 import { useUser } from "@clerk/nextjs";
-import {
-    getDownloadURL,
-    getStorage,
-    ref,
-    uploadBytesResumable
-} from "firebase/storage";
+
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from 'react';
-import { app } from '../../firebase';
-
+import { supabase } from "@/lib/supabase";
 export default function CreateListing() {
     const {isSignedIn, user, isLoaded} = useUser();
     const [files, setFiles] = useState([]);
@@ -90,29 +84,22 @@ export default function CreateListing() {
 
 
     const storeImage = async (file) => {
-        return new Promise((resolve, reject) => {
-            const storage=getStorage(app);
-            const filename=new Date().getTime() +  file.name;
-            const storageRef=ref(storage, filename);
-            const uploadTask=uploadBytesResumable(storageRef, file);
+    const filename = `${Date.now()}-${file.name}`;
 
-            uploadTask.on(
-                `state_changed`,
-                (snapshot)=>{
-                    const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
-                    console.log(`Upload is ${progress}% done`);
-                },
-                (error)=>{
-                    reject(error);
-                },
-                ()=>{
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL)=>{
-                        resolve(downloadURL);
-                    });
-                }
-            );
-        });
-    };
+    const { error } = await supabase.storage
+        .from("property-images")
+        .upload(filename, file);
+
+    if (error) {
+        throw error;
+    }
+
+    const { data } = supabase.storage
+        .from("property-images")
+        .getPublicUrl(filename);
+
+    return data.publicUrl;
+};
     
     const handleRemoveImagae = (index) => {
         setFormData({
