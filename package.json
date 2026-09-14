@@ -11,7 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@clerk/nextjs": "^5.7.6",
+    "@clerk/nextjs": "^6.39.6",
     "@supabase/supabase-js": "^2.116.0",
     "mongodb": "^7.1.0",
     "mongoose": "^8.23.0",
