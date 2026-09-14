@@ -1,11 +1,9 @@
 // Security headers applied to every response. Notes:
 //   * CSP intentionally allows 'unsafe-inline' on script-src because Next.js inlines
 //     hydration scripts; a strict CSP requires per-request nonces wired through Next's
-//     metadata API (out-of-scope auto-fix). Even non-strict CSP is a meaningful defense
-//     against injected <script src=...> attacks because script-src restricts origins.
+//     metadata API (out-of-scope auto-fix).
 //   * X-XSS-Protection is set because the user requested it. OWASP recommends NOT
-//     setting it in modern apps (deprecated in modern browsers, can introduce its own
-//     vulnerabilities in legacy IE). It's harmless here.
+//     setting it in modern apps, but it is harmless here.
 
 const securityHeaders = [
   {
@@ -43,20 +41,20 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
 
-      // Next.js hydration
+      // Next.js hydration + Clerk
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com",
 
       // Styles
       "style-src 'self' 'unsafe-inline'",
 
       // Images
-      "img-src 'self' data: https://firebasestorage.googleapis.com https://*.supabase.co https://placehold.co https://images.unsplash.com https://img.clerk.com https://*.clerk.com",
+      "img-src 'self' data: https://*.supabase.co https://placehold.co https://images.unsplash.com https://img.clerk.com https://*.clerk.com",
 
       // Fonts
       "font-src 'self' data:",
 
       // API / network connections
-      "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.supabase.co",
+      "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.googleapis.com https://*.supabase.co",
 
       // Frames
       "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com",
@@ -89,11 +87,6 @@ const nextConfig = {
   // Next.js Image configuration
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
-      },
-
       {
         protocol: 'https',
         hostname: '*.supabase.co',

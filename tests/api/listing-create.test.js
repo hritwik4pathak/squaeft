@@ -35,7 +35,7 @@ const validBody = (overrides = {}) => ({
     offer: false,
     parking: false,
     furnished: false,
-    imageUrls: ['https://firebasestorage.googleapis.com/x.jpg'],
+    imageUrls: ['https://example.supabase.co/storage/v1/object/public/property-images/x.jpg'],
     whatsappNumber: '+91 98765 43210',
     ...overrides,
 });
@@ -86,7 +86,7 @@ describe('POST /api/listing/create — input validation', () => {
 
     it('rejects more than 6 images', async () => {
         const res = await POST(buildReq(validBody({
-            imageUrls: Array(7).fill('https://firebasestorage.googleapis.com/x.jpg'),
+            imageUrls: Array(7).fill('https://example.supabase.co/storage/v1/object/public/property-images/x.jpg'),
         })));
         expect(res.status).toBe(400);
     });

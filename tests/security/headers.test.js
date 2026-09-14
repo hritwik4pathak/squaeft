@@ -66,10 +66,10 @@ describe('next.config.js security headers', () => {
         expect(csp).toMatch(/form-action 'self'/);
     });
 
-    it('CSP allows the configured image origins (firebase, clerk)', async () => {
+    it('CSP allows the configured image origins (supabase, clerk)', async () => {
         const h = await getHeaderMap();
         const csp = h['Content-Security-Policy'];
-        expect(csp).toMatch(/firebasestorage\.googleapis\.com/);
+        expect(csp).toMatch(/supabase\.co/);
         expect(csp).toMatch(/clerk\.com/);
     });
 

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -10,15 +11,21 @@ export default function ContactPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     alert("Message sent successfully! 🚀");
-    setForm({ name: "", email: "", message: "" });
+
+    setForm({
+      name: "",
+      email: "",
+      message: "",
+    });
   };
 
-  // 🔥 ADD YOUR FIREBASE IMAGE LINKS HERE
+  // Add your image URLs here
   const images = [
-    "", // paste firebase image URL 1
-    "", // paste firebase image URL 2
-    "", // paste firebase image URL 3
+    "", // paste image URL 1
+    "", // paste image URL 2
+    "", // paste image URL 3
   ];
 
   return (
@@ -26,27 +33,31 @@ export default function ContactPage() {
 
       {/* Header */}
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-800">Contact Us</h1>
+        <h1 className="text-3xl font-bold text-gray-800">
+          Contact Us
+        </h1>
+
         <p className="text-gray-500 mt-2">
-          We re here to help you with buying, renting, or selling properties.
+          We&apos;re here to help you with buying, renting, or selling
+          properties.
         </p>
       </div>
 
-      {/* 🔥 Image Section (Firebase Ready) */}
+      {/* Image Section */}
       <div className="grid sm:grid-cols-3 gap-4 mb-10">
         {images.map((img, i) => (
           <div
             key={i}
-            className="h-48 w-full rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm"
+            className="h-48 w-full rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm overflow-hidden"
           >
             {img ? (
               <img
                 src={img}
-                alt={`support-${i}`}
+                alt={`support-${i + 1}`}
                 className="w-full h-full object-cover rounded-lg"
               />
             ) : (
-              "Add Firebase Image URL"
+              "Add Image URL"
             )}
           </div>
         ))}
@@ -85,7 +96,8 @@ export default function ContactPage() {
           </div>
 
           <div className="mt-6 p-4 bg-red-50 rounded-lg text-sm text-gray-600">
-            Need urgent help? Our support team usually responds within 24 hours.
+            Need urgent help? Our support team usually responds within 24
+            hours.
           </div>
         </div>
 
@@ -102,7 +114,10 @@ export default function ContactPage() {
               placeholder="Your Name"
               value={form.name}
               onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
+                setForm({
+                  ...form,
+                  name: e.target.value,
+                })
               }
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
               required
@@ -113,7 +128,10 @@ export default function ContactPage() {
               placeholder="Your Email"
               value={form.email}
               onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
+                setForm({
+                  ...form,
+                  email: e.target.value,
+                })
               }
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
               required
@@ -124,7 +142,10 @@ export default function ContactPage() {
               placeholder="Your Message..."
               value={form.message}
               onChange={(e) =>
-                setForm({ ...form, message: e.target.value })
+                setForm({
+                  ...form,
+                  message: e.target.value,
+                })
               }
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
               required

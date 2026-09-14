@@ -9,7 +9,7 @@ import {
     validateListingPayload,
 } from '@/lib/security/sanitize';
 
-const validImages = ['https://firebasestorage.googleapis.com/x.jpg'];
+const validImages = ['https://example.supabase.co/storage/v1/object/public/property-images/x.jpg'];
 const validPayload = {
     name: 'A reasonable listing name',
     description: 'desc',
@@ -138,7 +138,7 @@ describe('validateListingPayload', () => {
     it('rejects payloads with > 6 images', () => {
         const r = validateListingPayload({
             ...validPayload,
-            imageUrls: Array(7).fill('https://firebasestorage.googleapis.com/x.jpg'),
+            imageUrls: Array(7).fill('https://example.supabase.co/storage/v1/object/public/property-images/x.jpg'),
         });
         expect(r.ok).toBe(false);
     });

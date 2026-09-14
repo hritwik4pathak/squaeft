@@ -1,10 +1,10 @@
+"use client"
+import { useEffect, useState } from "react";
 
-import { useEffect, useState } from "react"
-
+import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
-import { useUser } from "@clerk/nextjs"
-import { usePathname, useRouter } from "next/navigation"
-import { ROUTES } from "@/lib/routes"
+import { useUser } from "@clerk/nextjs";
+import { usePathname, useRouter } from "next/navigation";
 export default function UpdateListing() {
     const {isSignedIn, user,isLoaded} = useUser()
     const [files, setFiles] = useState([]);

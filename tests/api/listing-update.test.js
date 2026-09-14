@@ -36,7 +36,7 @@ const validBody = (overrides = {}) => ({
     offer: false,
     parking: false,
     furnished: false,
-    imageUrls: ['https://firebasestorage.googleapis.com/x.jpg'],
+    imageUrls: ['https://example.supabase.co/storage/v1/object/public/property-images/x.jpg'],
     whatsappNumber: '+91 98765 43210',
     ...overrides,
 });
