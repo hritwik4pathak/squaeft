@@ -239,7 +239,7 @@ export default function Navbar() {
                     {item.links.map((link, j) => (
                       <Link
                         key={j}
-                        href={`/Search?searchTerm=${encodeURIComponent(link)}`}
+                        href={`/search?searchTerm=${encodeURIComponent(link)}`}
                         onClick={() => setDrawerOpen(false)}
                         className="py-2 px-3 text-sm text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg"
                       >
