@@ -1,13 +1,7 @@
-"use client"
-import {
-    getDownloadURL,
-    getStorage,
-    ref,
-    uploadBytesResumable,
-} from "firebase/storage"
+
 import { useEffect, useState } from "react"
 
-import { app } from "@/firebase"
+import { supabase } from "@/lib/supabase";
 import { useUser } from "@clerk/nextjs"
 import { usePathname, useRouter } from "next/navigation"
 import { ROUTES } from "@/lib/routes"
@@ -88,29 +82,30 @@ export default function UpdateListing() {
             }
             };
     const storeImage = async (file) => {
-        return new Promise((resolve, reject) => {
-            const storage = getStorage(app);
-            const fileName= new Date().getTime() +  file.name;
-            const storageRef = ref(storage, fileName);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-            uploadTask.on(
-                'state_changed',
-                (snapshot) => {
-                    const progress = 
-                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log(`Upload is ${progress}% done`);
-                },
-                (error) => {
-                    reject(error);
-                },
-                () => {  
-                  getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        resolve(downloadURL);
-                    });
-                }
-            );
-        });
-    };
+    if (file.size > 2 * 1024 * 1024) {
+        throw new Error("Each image must be less than 2MB");
+    }
+
+    const fileName = `${Date.now()}-${file.name}`;
+
+    const { error } = await supabase.storage
+        .from("property-images")
+        .upload(fileName, file);
+
+    if (error) {
+        throw error;
+    }
+
+    const { data } = supabase.storage
+        .from("property-images")
+        .getPublicUrl(fileName);
+
+    if (!data?.publicUrl) {
+        throw new Error("Could not get image URL");
+    }
+
+    return data.publicUrl;
+};
     const handleRemoveImage = (index) => {
         setFormData({
             ...formData,
